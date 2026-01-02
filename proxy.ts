@@ -17,7 +17,6 @@ export async function proxy(request: NextRequest) {
   const isPrivateRoute = privateRoutes.some(route => pathname.startsWith(route));
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
 
-  // Якщо немає accessToken
   if (!accessToken) {
     if (refreshToken) {
       try {
@@ -45,16 +44,16 @@ export async function proxy(request: NextRequest) {
           }
         }
       } catch {
-        // silent fail
+   
       }
     }
 
-    // Якщо refreshToken немає або недійсний
+   
     if (isPrivateRoute) return NextResponse.redirect(new URL('/sign-in', request.url));
     if (isPublicRoute) return NextResponse.next();
   }
 
-  // Якщо accessToken існує
+
   if (isPublicRoute) return NextResponse.redirect(new URL('/', request.url));
   if (isPrivateRoute) return NextResponse.next();
 

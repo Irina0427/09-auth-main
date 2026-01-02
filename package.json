@@ -1,5 +1,5 @@
 {
-  "name": "06-notehub-nextjs",
+  "name": "09-auth",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -22,7 +22,6 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
-    "@types/axios": "^0.9.36",
     "@types/cookie": "^0.6.0",
     "@types/node": "^20",
     "@types/react": "^19",
