@@ -4,22 +4,25 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { getMe, updateMe } from '@/lib/api/clientApi';
+import { useAuthStore } from '@/lib/store/authStore';
 import type { User } from '@/types/user';
 import css from './EditProfilePage.module.css';
 
 export default function ProfileEditPage() {
   const router = useRouter();
 
-  const [user, setUser] = useState<User | null>(null);
+  const setUser = useAuthStore(s => s.setUser); 
+
+
+  const [user, setLocalUser] = useState<User | null>(null);
   const [username, setUsername] = useState('');
 
   useEffect(() => {
     const fetchUser = async () => {
       const data = await getMe();
-      setUser(data);
+      setLocalUser(data);
       setUsername(data.username);
     };
-
     fetchUser();
   }, []);
 
@@ -27,18 +30,16 @@ export default function ProfileEditPage() {
     event.preventDefault();
     if (!user) return;
 
-    await updateMe({ username });
+    const updatedUser = await updateMe({ username });
 
+    setUser(updatedUser); 
     router.push('/profile');
-  };
-    
-  const handleCancel = () => {
-    router.push('/profile');
+    router.refresh();
   };
 
-  if (!user) {
-    return <div className={css.loader}>Loading...</div>;
-  }
+  const handleCancel = () => router.push('/profile');
+
+  if (!user) return <div className={css.loader}>Loading...</div>;
 
   return (
     <main className={css.mainContent}>
@@ -63,7 +64,7 @@ export default function ProfileEditPage() {
               type="text"
               className={css.input}
               value={username}
-              onChange={(event) => setUsername(event.target.value)}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>
@@ -71,13 +72,8 @@ export default function ProfileEditPage() {
           <p>Email: {user.email}</p>
 
           <div className={css.actions}>
-            <button type="submit" className={css.saveButton}>
-              Save
-            </button>
-            <button
-              type="button"
-              className={css.cancelButton}
-              onClick={handleCancel}>
+            <button type="submit" className={css.saveButton}>Save</button>
+            <button type="button" className={css.cancelButton} onClick={handleCancel}>
               Cancel
             </button>
           </div>
@@ -86,4 +82,3 @@ export default function ProfileEditPage() {
     </main>
   );
 }
-

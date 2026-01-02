@@ -1,4 +1,3 @@
-// proxy.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { parse } from 'cookie';
@@ -17,45 +16,72 @@ export async function proxy(request: NextRequest) {
   const isPrivateRoute = privateRoutes.some(route => pathname.startsWith(route));
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
 
+  
   if (!accessToken) {
+
     if (refreshToken) {
       try {
         const res = await checkServerSession();
         const setCookie = res.headers['set-cookie'];
 
-        if (setCookie) {
-          const cookieArray = Array.isArray(setCookie) ? setCookie : [setCookie];
-          for (const cookieStr of cookieArray) {
-            const parsed = parse(cookieStr);
-            const options = {
-              expires: parsed.Expires ? new Date(parsed.Expires) : undefined,
-              path: parsed.Path,
-              maxAge: Number(parsed['Max-Age']),
-            };
-            if (parsed.accessToken) cookieStore.set('accessToken', parsed.accessToken, options);
-            if (parsed.refreshToken) cookieStore.set('refreshToken', parsed.refreshToken, options);
-          }
-
+    
+        if (!setCookie) {
           if (isPrivateRoute) {
-            return NextResponse.next({ headers: { Cookie: cookieStore.toString() } });
+            return NextResponse.redirect(new URL('/sign-in', request.url));
           }
-          if (isPublicRoute) {
-            return NextResponse.redirect(new URL('/', request.url), { headers: { Cookie: cookieStore.toString() } });
+          return NextResponse.next();
+        }
+
+        const cookieArray = Array.isArray(setCookie) ? setCookie : [setCookie];
+
+        for (const cookieStr of cookieArray) {
+          const parsed = parse(cookieStr);
+
+          const options: {
+            expires?: Date;
+            path?: string;
+            maxAge?: number;
+          } = {};
+
+          if (parsed.Expires) options.expires = new Date(parsed.Expires);
+          if (parsed.Path) options.path = parsed.Path;
+          if (parsed['Max-Age']) options.maxAge = Number(parsed['Max-Age']);
+
+          if (parsed.accessToken) {
+            cookieStore.set('accessToken', parsed.accessToken, options);
+          }
+          if (parsed.refreshToken) {
+            cookieStore.set('refreshToken', parsed.refreshToken, options);
           }
         }
+
+        if (isPrivateRoute) {
+          return NextResponse.next({ headers: { Cookie: cookieStore.toString() } });
+        }
+
+        if (isPublicRoute) {
+          return NextResponse.redirect(new URL('/', request.url), {
+            headers: { Cookie: cookieStore.toString() },
+          });
+        }
       } catch {
-   
+     
+        if (isPrivateRoute) {
+          return NextResponse.redirect(new URL('/sign-in', request.url));
+        }
       }
     }
 
    
-    if (isPrivateRoute) return NextResponse.redirect(new URL('/sign-in', request.url));
-    if (isPublicRoute) return NextResponse.next();
+    if (isPrivateRoute) {
+      return NextResponse.redirect(new URL('/sign-in', request.url));
+    }
+
+    return NextResponse.next();
   }
-
-
-  if (isPublicRoute) return NextResponse.redirect(new URL('/', request.url));
-  if (isPrivateRoute) return NextResponse.next();
+ if (isPublicRoute) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
 
   return NextResponse.next();
 }

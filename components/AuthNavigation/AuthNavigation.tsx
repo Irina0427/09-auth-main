@@ -8,7 +8,9 @@ import css from './AuthNavigation.module.css';
 
 export default function AuthNavigation() {
   const router = useRouter();
+
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const user = useAuthStore(state => state.user);
   const clearIsAuthenticated = useAuthStore(state => state.clearIsAuthenticated);
 
   const handleLogout = async () => {
@@ -23,7 +25,6 @@ export default function AuthNavigation() {
   };
 
   if (!isAuthenticated) {
-
     return (
       <>
         <li className={css.navigationItem}>
@@ -42,11 +43,19 @@ export default function AuthNavigation() {
 
   return (
     <>
+      {/* ✅ Дані користувача */}
+ <li className={css.navigationItem}>
+  <span className={css.userInfo}>
+    {user?.email}
+  </span>
+</li>
+
       <li className={css.navigationItem}>
         <Link href="/profile" prefetch={false} className={css.navigationLink}>
           Profile
         </Link>
       </li>
+
       <li className={css.navigationItem}>
         <button className={css.logoutButton} onClick={handleLogout}>
           Logout
