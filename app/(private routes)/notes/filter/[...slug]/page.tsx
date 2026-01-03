@@ -46,7 +46,6 @@ export default async function NotesPage({ params }: Props) {
     search: '',
     page: 1,
     perPage: 12,
-    sortBy: 'created',
     ...(tag ? { tag } : {}),
   };
 

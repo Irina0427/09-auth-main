@@ -29,7 +29,6 @@ export default function NotesClient({ tag = '' }: Props) {
     search: debouncedSearch,
     page,
     perPage: PER_PAGE,
-    sortBy: 'created',
     ...(tag ? { tag } : {}),
   };
 

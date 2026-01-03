@@ -3,13 +3,12 @@ import { cookies } from 'next/headers';
 import type { User } from '@/types/user';
 import type { Note } from '@/types/note';
 
+const baseURL = process.env.NEXT_PUBLIC_API_URL + '/api';
 
 export const serverApi = axios.create({
-  baseURL: process.env.API_URL,
+  baseURL,
   withCredentials: true,
 });
-
-
 
 export const checkServerSession = async () => {
   const cookieStore = await cookies();
@@ -33,13 +32,11 @@ export const getServerMe = async (): Promise<User> => {
   return data;
 };
 
-
 export interface FetchNotesParams {
   search?: string;
   tag?: string;
   page?: number;
   perPage?: number;
-  sortBy?: 'created' | 'updated';
 }
 
 export interface FetchNotesResponse {
