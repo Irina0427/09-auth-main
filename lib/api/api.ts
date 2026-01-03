@@ -1,9 +1,9 @@
 import axios, { AxiosError } from 'axios';
 
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL + '/api',
   withCredentials: true,
 });
+
 
 export type ApiError = AxiosError<{
   error?: string;
@@ -13,3 +13,4 @@ export type ApiError = AxiosError<{
 export const isApiError = (error: unknown): error is ApiError => {
   return axios.isAxiosError(error);
 };
+console.log('API_URL:', process.env.API_URL);

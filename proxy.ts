@@ -13,9 +13,12 @@ export async function proxy(request: NextRequest) {
   const accessToken = cookieStore.get('accessToken')?.value;
   const refreshToken = cookieStore.get('refreshToken')?.value;
 
-  const isPrivateRoute = privateRoutes.some(route => pathname.startsWith(route));
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
-
+  const isPrivateRoute = privateRoutes.some(route =>
+    pathname.startsWith(route)
+  );
+  const isPublicRoute = publicRoutes.some(route =>
+    pathname.startsWith(route)
+  );
 
   if (!accessToken && refreshToken) {
     try {
@@ -29,19 +32,36 @@ export async function proxy(request: NextRequest) {
         return NextResponse.next();
       }
 
+      const response = NextResponse.next();
       const cookieArray = Array.isArray(setCookie) ? setCookie : [setCookie];
 
       for (const cookieStr of cookieArray) {
         const parsed = parse(cookieStr);
-        if (parsed.accessToken) cookieStore.set('accessToken', parsed.accessToken);
-        if (parsed.refreshToken) cookieStore.set('refreshToken', parsed.refreshToken);
+
+        if (parsed.accessToken) {
+          response.cookies.set('accessToken', parsed.accessToken, {
+            path: '/',
+            httpOnly: true,
+          });
+        }
+
+        if (parsed.refreshToken) {
+          response.cookies.set('refreshToken', parsed.refreshToken, {
+            path: '/',
+            httpOnly: true,
+          });
+        }
       }
+
+      return response;
     } catch {
       if (isPrivateRoute) {
         return NextResponse.redirect(new URL('/sign-in', request.url));
       }
+      return NextResponse.next();
     }
   }
+
 
   if (!accessToken && isPrivateRoute) {
     return NextResponse.redirect(new URL('/sign-in', request.url));

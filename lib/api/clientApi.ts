@@ -1,79 +1,54 @@
-import { api } from './api';
+import axios from 'axios';
 import type { User } from '@/types/user';
 import type { Note, NoteTag } from '@/types/note';
 
-/* Auth */
 
-export interface RegisterRequest {
+const clientApi = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  withCredentials: true,
+});
+
+
+
+export interface AuthRequest {
   email: string;
   password: string;
 }
 
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export async function register(data: RegisterRequest): Promise<User> {
-  const res = await api.post<User>('/auth/register', data, {
-    withCredentials: true
-  });
+export async function register(data: AuthRequest): Promise<User> {
+  const res = await clientApi.post<User>('/api/auth/register', data);
   return res.data;
 }
 
-export async function login(data: LoginRequest): Promise<User> {
-  const res = await api.post<User>('/auth/login', data, {
-    withCredentials: true,
-  });
+export async function login(data: AuthRequest): Promise<User> {
+  const res = await clientApi.post<User>('/api/auth/login', data);
   return res.data;
 }
 
 export async function logout(): Promise<void> {
-  await api.post('/auth/logout', {}, {
-    withCredentials: true
-  });
+  await clientApi.post('/api/auth/logout');
 }
 
 export async function checkSession(): Promise<User | null> {
   try {
-    const res = await api.get<User>('/auth/session', {
-      withCredentials: true
-    });
+    const res = await clientApi.get<User>('/api/auth/session');
     return res.data ?? null;
   } catch {
     return null;
   }
 }
 
-/* User */
-
 export async function getMe(): Promise<User> {
-  const res = await api.get<User>('/users/me', {
-    withCredentials: true,
-  });
-
-  if (!res.data) {
-    throw new Error('Unauthorized');
-  }
-
+  const res = await clientApi.get<User>('/api/users/me');
   return res.data;
 }
-
 
 export async function updateMe(data: Partial<User>): Promise<User> {
-  const res = await api.patch<User>('/users/me', data, {
-    withCredentials: true,
-  });
-
-  if (!res.data) {
-    throw new Error('Failed to update profile');
-  }
-
+  const res = await clientApi.patch<User>('/api/users/me', data);
   return res.data;
 }
 
 
-/* Notes */
 
 export interface FetchNotesParams {
   search?: string;
@@ -83,60 +58,34 @@ export interface FetchNotesParams {
   sortBy?: 'created' | 'updated';
 }
 
+
 export interface FetchNotesResponse {
   notes: Note[];
   totalPages: number;
 }
 
-export interface CreateNoteParams {
-  title: string;
-  content: string;
-  tag: NoteTag;
-}
-
-export async function fetchNotes(params: FetchNotesParams): Promise<FetchNotesResponse> {
-  try {
-    const res = await api.get<FetchNotesResponse>('/notes', {
-      params,
-      withCredentials: true,
-    });
-    return res.data ?? { notes: [], totalPages: 0 };
-  } catch {
-    return { notes: [], totalPages: 0 };
-  }
+export async function fetchNotes(
+  params: FetchNotesParams
+): Promise<FetchNotesResponse> {
+  const res = await clientApi.get<FetchNotesResponse>('/api/notes', { params });
+  return res.data;
 }
 
 export async function fetchNoteById(id: string): Promise<Note> {
-  const res = await api.get<Note>(`/notes/${id}`, { withCredentials: true });
-  
-  if (!res.data)
-    throw new Error('Note not found');
-  
+  const res = await clientApi.get<Note>(`/api/notes/${id}`);
   return res.data;
 }
 
-export async function createNote(data: CreateNoteParams): Promise<Note> {
-  const res = await api.post<Note>('/notes', data, {
-    withCredentials: true,
-  });
-
-  if (!res.data) {
-    throw new Error('Failed to create note');
-  }
-
+export async function createNote(data: {
+  title: string;
+  content: string;
+  tag: NoteTag;
+}): Promise<Note> {
+  const res = await clientApi.post<Note>('/api/notes', data);
   return res.data;
 }
-
 
 export async function deleteNote(id: string): Promise<Note> {
-  const res = await api.delete<Note>(`/notes/${id}`, {
-    withCredentials: true,
-  });
-
-  if (!res.data) {
-    throw new Error('Failed to delete note');
-  }
-
+  const res = await clientApi.delete<Note>(`/api/notes/${id}`);
   return res.data;
 }
-
